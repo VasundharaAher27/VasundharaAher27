@@ -165,6 +165,22 @@ class MaintainerReplyTests(unittest.TestCase):
 class AvailabilityTests(unittest.TestCase):
     def test_open_unassigned_recent_issue_is_available(self):
         self.assertTrue(radar.issue_is_available(issue(), SINCE))
+    
+    def test_missing_optional_metadata_does_not_crash(self):
+        for item in (
+            {},
+            {"timelineItems": None},
+            {"timelineItems": {"nodes": None}},
+            {"assignees": None},
+        ):
+            with self.subTest(issue=item):
+                try:
+                    radar.issue_is_available(item, SINCE)
+                except (AttributeError, TypeError, KeyError):
+                    self.fail(
+                        f"issue_is_available crashed on optional metadata: {item!r}"
+                    )
+    
 
     def test_assigned_issue_is_not_available(self):
         self.assertFalse(radar.issue_is_available(issue(assignees={"totalCount": 1}), SINCE))
